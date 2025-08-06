@@ -1,0 +1,9 @@
+{
+    "shellformat.path": "shfmt",
+    "files.associations": {
+        "*.sh": "shellscript"
+    },
+    "[shellscript]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format"
+    }
+}
