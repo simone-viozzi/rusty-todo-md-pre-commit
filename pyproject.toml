@@ -1,0 +1,6 @@
+[project]
+name = "rusty-todo-md-pre-commit"
+version = "0.0.0"
+dependencies = [
+    "rusty-todo-md==1.6.3",
+]
