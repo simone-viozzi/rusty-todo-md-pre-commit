@@ -10,8 +10,6 @@ PYPI_URL="https://pypi.org/pypi/${TARGET_REPO}/json"
 ###############################################################################
 
 FILES_TO_UPDATE=(pyproject.toml README.md)
-VERSION_REGEX='^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
-
 ###############################################################################
 # Helpers
 ###############################################################################
@@ -44,10 +42,13 @@ get_latest_git_tag() {
 update_files() {
   local version="$1"
 
-  sed -i -E "s#\"${TARGET_REPO}==${VERSION_REGEX}\"#\"${TARGET_REPO}==${version}\"#" pyproject.toml
+  # pyproject.toml  ── match until the next double-quote
+  sed -i -E "s#(\"${TARGET_REPO}==)[^\"]+\"#\1${version}\"#" pyproject.toml
 
-  sed -i -E "s#rev: v${VERSION_REGEX}#rev: v${version}#" README.md
+  # README.md       ── match until the next space OR end-of-line
+  sed -i -E "s#(rev: v)[^[:space:]]+#\1${version}#" README.md
 }
+
 
 # Stage modified files, commit, and tag the commit.
 commit_and_tag() {
