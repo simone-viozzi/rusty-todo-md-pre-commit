@@ -2,8 +2,11 @@ name: main
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [pypi_release]
+    inputs:
+      version:
+        description: "Version from upstream (optional)"
+        required: false
+        default: ""
 
 concurrency:
   group: mirror
