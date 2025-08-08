@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version from upstream (optional)"
+        description: "Version from upstream (optional). If empty, mirror latest on PyPI."
         required: false
         default: ""
 
@@ -18,37 +18,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # ensure tags & full history are available
+          fetch-depth: 0  # we need tags & history
 
-      - name: Wait for PyPI propagation
-        if: ${{ github.event_name == 'repository_dispatch' }}
-        run: sleep 30
+      - name: Capture version input (if any)
+        run: echo "PAYLOAD_VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
 
-      - name: Extract version from payload (if any)
-        id: payload
-        if: ${{ github.event_name == 'repository_dispatch' }}
-        run: |
-          echo "PAYLOAD_VERSION=${{ github.event.client_payload.version }}" >> "$GITHUB_ENV"
-          echo "Payload version: ${{ github.event.client_payload.version }}"
-
-      - name: set git config
+      - name: Configure git author
         run: |
           git config --global user.email "release-bot@example.com"
           git config --global user.name "Release Bot"
 
-      # Let sync.sh prefer $PAYLOAD_VERSION if set, else fall back to PyPI latest
-      - name: sync mirror
+      - name: Sync mirror
         run: ./sync.sh
         env:
           PAYLOAD_VERSION: ${{ env.PAYLOAD_VERSION }}
 
-      - name: check for unpushed commits
+      - name: Check for unpushed commits
         id: check_unpushed
         run: |
-          # Ensure origin/main exists locally
           git fetch origin main --tags
           if [ -z "$(git log origin/main..HEAD)" ]; then
             echo "changes_exist=false" >> $GITHUB_ENV
@@ -58,18 +49,17 @@ jobs:
             echo "Unpushed commits found."
           fi
 
-      - name: push changes if they exist
+      - name: Push changes (branch + tags)
         if: env.changes_exist == 'true'
         run: |
-          git push origin HEAD:refs/heads/main
+          git push origin HEAD:main
           git push origin --tags
 
-      - name: create release on new tag if new changes exist
+      - name: Create GitHub Release
         if: env.changes_exist == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Prefer the tag we just created in sync.sh; fall back to "most recent tag"
           TAG_NAME="${PAYLOAD_VERSION:+v$PAYLOAD_VERSION}"
           if [ -z "$TAG_NAME" ]; then
             TAG_NAME="$(git describe --tags "$(git rev-list --tags --max-count=1)")"

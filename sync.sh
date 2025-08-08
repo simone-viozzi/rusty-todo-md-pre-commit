@@ -2,14 +2,13 @@
 set -euo pipefail
 
 ###############################################################################
-# Configuration – tweak these two lines to point the script at a different
-# upstream project without touching the rest of the file.
+# Configuration
 ###############################################################################
 TARGET_REPO="rusty-todo-md"
 PYPI_URL="https://pypi.org/pypi/${TARGET_REPO}/json"
-###############################################################################
 
 FILES_TO_UPDATE=(pyproject.toml README.md)
+
 ###############################################################################
 # Helpers
 ###############################################################################
@@ -42,10 +41,9 @@ get_latest_git_tag() {
 update_files() {
   local version="$1"
 
-  # pyproject.toml  ── match until the next double-quote
+  # pyproject.toml - match until the next double-quote
   sed -i -E "s#(\"${TARGET_REPO}==)[^\"]+\"#\1${version}\"#" pyproject.toml
-
-  # README.md       ── match until the next space OR end-of-line
+  # README.md       – match until next space OR end-of-line
   sed -i -E "s#(rev: v)[^[:space:]]+#\1${version}#" README.md
 }
 
@@ -59,18 +57,29 @@ commit_and_tag() {
 }
 
 ###############################################################################
-# Main flow
+# Main
 ###############################################################################
 main() {
   local latest_local latest_upstream
+
   latest_local="$(get_latest_git_tag || echo '0.0.0')"
-  latest_upstream="$(get_latest_pypi_version)"
+
+  # Prefer explicit input (PAYLOAD_VERSION) if provided; else PyPI latest
+  if [[ -n "${PAYLOAD_VERSION:-}" ]]; then
+    # Optional: verify version exists on PyPI
+    if ! curl -sSL "${PYPI_URL}" | jq -e --arg v "$PAYLOAD_VERSION" '.releases[$v] | length > 0' >/dev/null; then
+      echo "❌ Version '$PAYLOAD_VERSION' not found on PyPI. Aborting."
+      exit 1
+    fi
+    latest_upstream="$PAYLOAD_VERSION"
+  else
+    latest_upstream="$(get_latest_pypi_version)"
+  fi
 
   # If upstream is newer than local, mirror the latest upstream version
   if [[ "$(printf '%s\n%s\n' "$latest_local" "$latest_upstream" | sort -V | tail -n1)" == "$latest_upstream" && "$latest_upstream" != "$latest_local" ]]; then
     echo "➡️  Mirroring ${latest_upstream}"
     update_files "${latest_upstream}"
-
     if [[ -n "$(git status --porcelain)" ]]; then
       commit_and_tag "${latest_upstream}"
     else
