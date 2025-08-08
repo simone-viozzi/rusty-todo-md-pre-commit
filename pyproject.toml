@@ -2,5 +2,5 @@
 name = "rusty-todo-md-pre-commit"
 version = "0.0.0"
 dependencies = [
-    "rusty-todo-md==1.7.2",
+    "rusty-todo-md==1.7.3",
 ]
