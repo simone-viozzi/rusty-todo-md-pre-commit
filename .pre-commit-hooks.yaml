@@ -3,4 +3,3 @@
   entry: rusty-todo-md
   language: python
   types_or: [python, rust]
-  additional_dependencies: [ rusty_todo_md==1.6.4 ]
