@@ -1,6 +1,17 @@
+[build-system]
+requires = ["setuptools>=69.5", "wheel>=0.43"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "rusty-todo-md-pre-commit"
 version = "0.0.0"
-dependencies = [
-    "rusty-todo-md==1.7.4",
-]
+description = "Pre-commit shim for rusty-todo-md (installs prebuilt wheels from PyPI)."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = ["rusty-todo-md==1.7.4"]
+
+[tool.setuptools]
+# This shim has no importable packages; tell setuptools not to look for any.
+packages = []
+include-package-data = false
