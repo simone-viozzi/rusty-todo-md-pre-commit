@@ -2,4 +2,4 @@
   name: Rusty TODO Extractor
   entry: rusty-todo-md
   language: python
-  types_or: [python, rust]
+  types: [text]
