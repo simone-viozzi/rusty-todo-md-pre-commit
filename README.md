@@ -18,7 +18,7 @@ Add this to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/simone-viozzi/rusty-todo-md-pre-commit
-    rev: v1.10.1
+    rev: v1.10.2
     hooks:
       - id: rusty-todo-md
 ```
