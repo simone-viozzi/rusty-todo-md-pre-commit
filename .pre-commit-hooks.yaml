@@ -3,3 +3,7 @@
   entry: rusty-todo-md
   language: python
   types: [text]
+  # Every invocation does read-merge-write on TODO.md. Without this,
+  # pre-commit splits the file list into parallel batches and the
+  # concurrent writers drop each other's entries.
+  require_serial: true
