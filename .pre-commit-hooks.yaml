@@ -7,9 +7,17 @@
   # pre-commit splits the file list into parallel batches and the
   # concurrent writers drop each other's entries.
   require_serial: true
-  # When .gitattributes routes TODO.md to the merge driver, every run
-  # registers the driver for this clone. The pre-rebase stage does that
-  # before a rebase (it gets no files and never touches TODO.md), and
-  # always_run makes that zero-file run happen at all.
-  stages: [pre-commit, pre-rebase]
+
+# Optional. Aborts a rebase when .gitattributes routes TODO.md to the
+# merge driver but this clone hasn't registered it (or its binary is
+# gone), since git would silently fall back to its text merge. Read-only;
+# the rusty-todo-md hook above does the registering. Needs the pre-rebase
+# hook type installed (default_install_hook_types: [pre-commit, pre-rebase]).
+- id: rusty-todo-md-pre-rebase
+  name: Rusty TODO merge driver check
+  entry: rusty-todo-md --check-merge-driver
+  language: python
+  stages: [pre-rebase]
   always_run: true
+  pass_filenames: false
+  minimum_pre_commit_version: "3.2.0"
